@@ -1,0 +1,213 @@
+// filepath: c:\Users\lmwat\social-ai-manager\prisma\schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  role          Role      @default(USER)
+  plan          Plan      @default(FREE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  accounts      Account[]
+  sessions      Session[]
+  socialAccounts SocialAccount[]
+  posts         Post[]
+  analytics     Analytics[]
+  teams         TeamMember[]
+  contentLibrary ContentItem[]
+  
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model SocialAccount {
+  id            String      @id @default(cuid())
+  userId        String
+  platform      Platform
+  accountId     String
+  username      String
+  accessToken   String      @db.Text
+  refreshToken  String?     @db.Text
+  expiresAt     DateTime?
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts         Post[]
+  analytics     Analytics[]
+  
+  @@unique([userId, platform, accountId])
+  @@map("social_accounts")
+}
+
+model Post {
+  id              String        @id @default(cuid())
+  userId          String
+  socialAccountId String
+  content         String        @db.Text
+  mediaUrls       String[]
+  hashtags        String[]
+  status          PostStatus    @default(DRAFT)
+  scheduledAt     DateTime?
+  publishedAt     DateTime?
+  platform        Platform
+  platformPostId  String?
+  aiGenerated     Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  socialAccount   SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+  analytics       Analytics?
+  
+  @@map("posts")
+}
+
+model Analytics {
+  id              String    @id @default(cuid())
+  userId          String
+  socialAccountId String
+  postId          String?   @unique
+  platform        Platform
+  date            DateTime
+  impressions     Int       @default(0)
+  engagements     Int       @default(0)
+  likes           Int       @default(0)
+  comments        Int       @default(0)
+  shares          Int       @default(0)
+  clicks          Int       @default(0)
+  reach           Int       @default(0)
+  followers       Int       @default(0)
+  createdAt       DateTime  @default(now())
+  
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  socialAccount   SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+  post            Post?         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  @@map("analytics")
+}
+
+model Team {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  members     TeamMember[]
+  
+  @@map("teams")
+}
+
+model TeamMember {
+  id      String   @id @default(cuid())
+  userId  String
+  teamId  String
+  role    TeamRole @default(MEMBER)
+  
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team    Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, teamId])
+  @@map("team_members")
+}
+
+model ContentItem {
+  id          String      @id @default(cuid())
+  userId      String
+  name        String
+  type        ContentType
+  url         String
+  description String?
+  tags        String[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("content_library")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum Plan {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum Platform {
+  TWITTER
+  INSTAGRAM
+  FACEBOOK
+  LINKEDIN
+  TIKTOK
+  YOUTUBE
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  FAILED
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  EDITOR
+  MEMBER
+  VIEWER
+}
+
+enum ContentType {
+  IMAGE
+  VIDEO
+  TEMPLATE
+  AUDIO
+}

@@ -1,0 +1,306 @@
+// Social Media Manager Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatar    String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  accounts        Account[]
+  sessions        Session[]
+  socialAccounts  SocialAccount[]
+  posts           Post[]
+  contentLibrary  ContentLibrary[]
+  teamMemberships TeamMembership[]
+  aiUsage         AIUsage[]
+  teamInvitations TeamInvitation[] @relation("TeamInvitations")
+  abTests         ABTest[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// Social Media Account Management
+model SocialAccount {
+  id          String   @id @default(cuid())
+  userId      String
+  platform    Platform
+  username    String
+  displayName String?
+  avatar      String?
+  accessToken String   @db.Text
+  refreshToken String? @db.Text
+  expiresAt   DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts Post[]
+
+  @@unique([userId, platform, username])
+  @@map("social_accounts")
+}
+
+// Content Management
+model Post {
+  id          String     @id @default(cuid())
+  userId      String
+  accountId   String
+  content     String     @db.Text
+  mediaUrls   String[]
+  hashtags    String[]
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  status      PostStatus @default(DRAFT)
+  platform    Platform
+  aiGenerated Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account      SocialAccount     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  analytics    PostAnalytics[]
+  abTestVariant ABTestVariant?
+
+  @@map("posts")
+}
+
+model ContentLibrary {
+  id          String      @id @default(cuid())
+  userId      String
+  title       String
+  content     String?     @db.Text
+  mediaUrl    String?
+  mediaType   MediaType?
+  tags        String[]
+  category    String?
+  isTemplate  Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("content_library")
+}
+
+// Analytics
+model PostAnalytics {
+  id             String   @id @default(cuid())
+  postId         String
+  impressions    Int      @default(0)
+  engagements    Int      @default(0)
+  likes          Int      @default(0)
+  shares         Int      @default(0)
+  comments       Int      @default(0)
+  clicks         Int      @default(0)
+  reach          Int      @default(0)
+  engagementRate Float    @default(0)
+  recordedAt     DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("post_analytics")
+}
+
+// AI Usage Tracking
+model AIUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  feature   AIFeature
+  tokens    Int
+  cost      Float
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ai_usage")
+}
+
+// Team Management
+model TeamMembership {
+  id       String   @id @default(cuid())
+  userId   String
+  teamId   String
+  role     TeamRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@map("team_memberships")
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     TeamMembership[]
+  invitations TeamInvitation[]
+
+  @@map("teams")
+}
+
+model TeamInvitation {
+  id          String            @id @default(cuid())
+  teamId      String
+  email       String
+  role        TeamRole          @default(MEMBER)
+  status      InvitationStatus  @default(PENDING)
+  token       String            @unique @default(cuid())
+  invitedById String
+  createdAt   DateTime          @default(now())
+  expiresAt   DateTime
+
+  team      Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  invitedBy User @relation("TeamInvitations", fields: [invitedById], references: [id])
+
+  @@map("team_invitations")
+}
+
+// A/B Testing
+model ABTest {
+  id             String        @id @default(cuid())
+  userId         String
+  name           String
+  description    String?
+  status         TestStatus    @default(DRAFT)
+  testMetric     String        @default("ENGAGEMENT_RATE")
+  trafficSplit   Float         @default(50)
+  duration       Int           @default(24) // hours
+  targetAudience Json?
+  platforms      String[]
+  startDate      DateTime?
+  endDate        DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variants ABTestVariant[]
+
+  @@map("ab_tests")
+}
+
+model ABTestVariant {
+  id                String   @id @default(cuid())
+  testId            String
+  name              String
+  postId            String?  @unique
+  trafficPercentage Float    @default(50)
+  impressions       Int      @default(0)
+  engagements       Int      @default(0)
+  conversions       Int      @default(0)
+  createdAt         DateTime @default(now())
+
+  test ABTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  post Post?  @relation(fields: [postId], references: [id], onDelete: SetNull)
+
+  @@map("ab_test_variants")
+}
+
+// Enums
+enum Role {
+  USER
+  ADMIN
+  PREMIUM
+}
+
+enum Platform {
+  TWITTER
+  INSTAGRAM
+  FACEBOOK
+  LINKEDIN
+  TIKTOK
+  YOUTUBE
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  FAILED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  GIF
+  DOCUMENT
+}
+
+enum AIFeature {
+  CONTENT_GENERATION
+  HASHTAG_SUGGESTION
+  SENTIMENT_ANALYSIS
+  TREND_DETECTION
+  OPTIMIZATION
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  EDITOR
+  MEMBER
+  VIEWER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum TestStatus {
+  DRAFT
+  RUNNING
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
