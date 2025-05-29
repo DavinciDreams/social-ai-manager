@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-// Define TestStatus type or enum if needed
-type TestStatus = 'DRAFT' | 'RUNNING' | 'COMPLETED' | 'CANCELLED';
+import { JsonValue } from '@prisma/client/runtime/library';
+
+type TestStatus = 'DRAFT' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'ARCHIVED';
 
 type ABTestWithVariants = {
   id: string
@@ -65,32 +66,28 @@ export async function POST(request: NextRequest) {
         mediaUrls?: string[];
         hashtags?: string[];
         scheduledAt?: string | Date | null;
-    }
-
-    interface ABTestTransactionResult {
+    }    interface ABTestTransactionResult {
         id: string;
         userId: string;
         name: string;
-        description: string;
+        description: string | null;
         testMetric: string;
         trafficSplit: number;
         duration: number;
-        targetAudience: Record<string, unknown>;
+        targetAudience: JsonValue | null;
         platforms: string[];
         status: string;
         startDate: Date | null;
         endDate: Date | null;
-    }
-
-    interface ABTestRecord {
+    }    interface ABTestRecord {
         id: string;
         userId: string;
         name: string;
-        description: string;
+        description: string | null;
         testMetric: string;
         trafficSplit: number;
         duration: number;
-        targetAudience: Record<string, unknown>;
+        targetAudience: JsonValue | null;
         platforms: string[];
         status: string;
         startDate: Date | null;
