@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: social-ai-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: social_ai_manager
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - social-ai-dev-network
+
+  # Redis for development
+  redis:
+    image: redis:7-alpine
+    container_name: social-ai-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redispassword
+    volumes:
+      - redis_dev_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - social-ai-dev-network
+
+  # Development Application (with hot reload)
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: social-ai-app-dev
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/social_ai_manager?schema=public
+      - NEXTAUTH_URL=http://localhost:3000
+      - REDIS_URL=redis://default:redispassword@redis:6379
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - social-ai-dev-network
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+
+  # Prisma Studio for development
+  prisma-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile.prisma-studio
+    container_name: social-ai-prisma-studio-dev
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/social_ai_manager?schema=public
+    ports:
+      - "5555:5555"
+    depends_on:
+      - postgres
+    networks:
+      - social-ai-dev-network
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+
+networks:
+  social-ai-dev-network:
+    driver: bridge
