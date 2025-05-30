@@ -252,9 +252,8 @@ interface TeamsViewProps {
 
 const TeamsView: React.FC<TeamsViewProps> = ({ teams, selectedTeam, onTeamSelect, onCreateTeam }) => {
   if (teams.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <UserGroupIcon className="mx-auto h-12 w-12 text-gray-400" />
+    return (      <div className="text-center py-12">
+        <UserGroupIcon className="mx-auto h-8 w-8 text-gray-400" />
         <h3 className="mt-2 text-sm font-medium text-gray-900">No teams found</h3>
         <p className="mt-1 text-sm text-gray-500">
           Create your first team to start collaborating.
@@ -326,11 +325,10 @@ const MembersView: React.FC<MembersViewProps> = ({ team, members, onInviteMember
         return 'bg-gray-100 text-gray-800';
     }
   };
-
   if (!team) {
     return (
       <div className="text-center py-12">
-        <UserGroupIcon className="mx-auto h-12 w-12 text-gray-400" />
+        <UserGroupIcon className="mx-auto h-8 w-8 text-gray-400" />
         <h3 className="mt-2 text-sm font-medium text-gray-900">Select a team</h3>
         <p className="mt-1 text-sm text-gray-500">
           Choose a team to view and manage its members.

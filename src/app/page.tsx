@@ -1,11 +1,19 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import Dashboard from '@/components/Dashboard'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import LandingPage from '@/components/LandingPage'
 
 export default function Home() {
   const { data: session, status } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (session) {
+      router.push('/dashboard')
+    }
+  }, [session, router])
 
   if (status === 'loading') {
     return (
@@ -16,7 +24,7 @@ export default function Home() {
   }
 
   if (session) {
-    return <Dashboard />
+    return null // Will redirect in useEffect
   }
 
   return <LandingPage />

@@ -129,19 +129,18 @@ const ContentLibrary: React.FC<ContentLibraryProps> = ({
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-
   const getTypeIcon = (type: ContentItem['type']) => {
     switch (type) {
       case 'IMAGE':
-        return <PhotoIcon className="h-6 w-6" />;
+        return <PhotoIcon className="h-5 w-5" />;
       case 'VIDEO':
-        return <VideoCameraIcon className="h-6 w-6" />;
+        return <VideoCameraIcon className="h-5 w-5" />;
       case 'AUDIO':
-        return <DocumentIcon className="h-6 w-6" />;
+        return <DocumentIcon className="h-5 w-5" />;
       case 'TEMPLATE':
-        return <DocumentIcon className="h-6 w-6" />;
+        return <DocumentIcon className="h-5 w-5" />;
       default:
-        return <DocumentIcon className="h-6 w-6" />;
+        return <DocumentIcon className="h-5 w-5" />;
     }
   };
 
@@ -257,7 +256,7 @@ const ContentLibrary: React.FC<ContentLibraryProps> = ({
         {dragOver && (
           <div className="absolute inset-0 bg-blue-50 bg-opacity-75 flex items-center justify-center z-10">
             <div className="text-center">
-              <CloudArrowUpIcon className="mx-auto h-12 w-12 text-blue-500" />
+              <CloudArrowUpIcon className="mx-auto h-8 w-8 text-blue-500" />
               <p className="mt-2 text-lg font-medium text-blue-900">
                 Drop files here to upload
               </p>
@@ -271,7 +270,7 @@ const ContentLibrary: React.FC<ContentLibraryProps> = ({
           </div>
         ) : filteredContent.length === 0 ? (
           <div className="text-center py-12">
-            <FolderIcon className="mx-auto h-12 w-12 text-gray-400" />
+            <FolderIcon className="mx-auto h-8 w-8 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">No content found</h3>
             <p className="mt-1 text-sm text-gray-500">
               Upload your first media file or template to get started.
@@ -347,15 +346,15 @@ const ContentItem: React.FC<ContentItemProps> = ({
   const getTypeIcon = (type: ContentItem['type']) => {
     switch (type) {
       case 'IMAGE':
-        return <PhotoIcon className="h-6 w-6" />;
+        return <PhotoIcon className="h-5 w-5" />;
       case 'VIDEO':
-        return <VideoCameraIcon className="h-6 w-6" />;
+        return <VideoCameraIcon className="h-5 w-5" />;
       case 'AUDIO':
-        return <DocumentIcon className="h-6 w-6" />;
+        return <DocumentIcon className="h-5 w-5" />;
       case 'TEMPLATE':
-        return <DocumentIcon className="h-6 w-6" />;
+        return <DocumentIcon className="h-5 w-5" />;
       default:
-        return <DocumentIcon className="h-6 w-6" />;
+        return <DocumentIcon className="h-5 w-5" />;
     }
   };
 

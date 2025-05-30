@@ -23,6 +23,12 @@ type TabType = 'overview' | 'create' | 'schedule' | 'analytics' | 'library' | 't
 export default function Dashboard() {
   const { data: session } = useSession()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
+  
+  // Debug function to test if buttons are working
+  const handleTabClick = (tabName: TabType) => {
+    console.log('Button clicked:', tabName)
+    setActiveTab(tabName)
+  }
   const navigation = [
     { name: 'Overview', href: 'overview', icon: HomeIcon },
     { name: 'Create Content', href: 'create', icon: PlusIcon },
@@ -55,60 +61,60 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg">
-        <div className="flex h-16 shrink-0 items-center px-6 border-b">
-          <h1 className="text-xl font-bold text-gray-900">Social AI Manager</h1>
+      <div className="w-64 bg-white shadow-lg flex flex-col">        <div className="flex h-16 items-center px-6 border-b border-gray-200">
+          <h1 className="text-lg font-bold text-gray-900">Social AI Manager</h1>
         </div>
         
-        <nav className="flex flex-1 flex-col p-4">
-          <ul role="list" className="flex flex-1 flex-col gap-y-1">
+        <nav className="flex-1 px-4 py-4 overflow-y-auto">
+          <ul className="space-y-1">
             {navigation.map((item) => (
-              <li key={item.name}>
-                <button
-                  onClick={() => setActiveTab(item.href as TabType)}
-                  className={`
-                    group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 w-full text-left
-                    ${activeTab === item.href
+              <li key={item.name}>                <button
+                  onClick={() => handleTabClick(item.href as TabType)}
+                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer ${
+                    activeTab === item.href
                       ? 'bg-blue-600 text-white'
                       : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                    }
-                  `}
+                  }`}
                 >
-                  <item.icon className="h-6 w-6 shrink-0" />
+                  <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
                   {item.name}
                 </button>
               </li>
             ))}
           </ul>
-          
-          <div className="mt-auto">
-            <div className="flex items-center gap-x-3 p-2">
-              <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
-                <span className="text-sm font-medium text-white">
-                  {session?.user?.name?.[0] || 'U'}
-                </span>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{session?.user?.name}</p>
-                <p className="text-xs text-gray-500">{session?.user?.email}</p>
-              </div>
-            </div>
-            <button
-              onClick={() => signOut()}
-              className="mt-2 w-full text-left text-sm text-gray-500 hover:text-gray-700 px-2"
-            >
-              Sign out
-            </button>
-          </div>
         </nav>
+        
+        <div className="border-t border-gray-200 p-4">
+          <div className="flex items-center">
+            <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-medium text-white">
+                {session?.user?.name?.[0]?.toUpperCase() || 'U'}
+              </span>
+            </div>
+            <div className="ml-3 overflow-hidden">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {session?.user?.name || 'User'}
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                {session?.user?.email}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => signOut()}
+            className="mt-3 w-full text-left text-sm text-gray-500 hover:text-gray-700 px-2 py-1"
+          >
+            Sign out
+          </button>
+        </div>
       </div>
 
       {/* Main content */}
-      <div className="pl-64">
-        <main className="py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="flex-1 overflow-auto">
+        <main className="p-6">
+          <div className="max-w-7xl mx-auto">
             {renderContent()}
           </div>
         </main>
